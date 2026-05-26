@@ -3,8 +3,15 @@ data/raw/*.csv
 data/raw/*.zip
 data/raw/ingestion_metadata.json
 data/processed/*.parquet
+data/processed/fact_orders/
 data/*.duckdb
 data/*.duckdb.wal
+
+# dbt
+dbt/olist_dbt/target/
+dbt/olist_dbt/dbt_packages/
+dbt/olist_dbt/logs/
+dbt/olist_dbt/.user.yml
 
 # Python
 __pycache__/

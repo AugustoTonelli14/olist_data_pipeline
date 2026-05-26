@@ -1,0 +1,8 @@
+olist_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../../data/olist_dbt.duckdb"
+      extensions:
+        - parquet

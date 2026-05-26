@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -146,6 +148,87 @@ def save_parquet(df: pd.DataFrame, name: str) -> Path:
     return path
 
 
+def save_partitioned_parquet(
+    df: pd.DataFrame, name: str, partition_cols: list[str]
+) -> Path:
+    """Write DataFrame as a partitioned Parquet dataset using PyArrow."""
+    output_dir = PROCESSED_DIR / name
+    output_dir.mkdir(parents=True, exist_ok=True)
+    table = pa.Table.from_pandas(df, preserve_index=False)
+    pq.write_to_dataset(
+        table,
+        root_path=str(output_dir),
+        partition_cols=partition_cols,
+    )
+    total_files = len(list(output_dir.rglob("*.parquet")))
+    logger.info(
+        "Saved partitioned %s: %d rows, %d partitions, cols=%s",
+        name,
+        len(df),
+        total_files,
+        partition_cols,
+    )
+    return output_dir
+
+
+def build_fact_orders_parquet(datasets: dict[str, pd.DataFrame]) -> None:
+    """Build a denormalized fact_orders DataFrame and save as partitioned Parquet."""
+    logger.info("Building partitioned fact_orders Parquet...")
+    orders = datasets["orders"]
+    items = datasets["order_items"]
+    payments = datasets["payments"]
+    reviews = datasets["reviews"]
+    customers = datasets["customers"]
+
+    # Aggregate payments per order
+    pay_agg = (
+        payments.groupby("order_id")
+        .agg(
+            payment_type=("payment_type", "first"),
+            payment_installments=("payment_installments", "first"),
+            payment_value=("payment_value", "sum"),
+        )
+        .reset_index()
+    )
+
+    # Keep latest review per order
+    rev_dedup = (
+        reviews.sort_values("review_creation_date", ascending=False)
+        .drop_duplicates(subset=["order_id"], keep="first")[
+            ["order_id", "review_score"]
+        ]
+    )
+
+    # Build fact
+    fact = items.merge(orders, on="order_id", how="inner")
+    fact = fact.merge(
+        customers[["customer_id", "customer_zip_code_prefix"]],
+        on="customer_id",
+        how="inner",
+    )
+    fact = fact.merge(pay_agg, on="order_id", how="left")
+    fact = fact.merge(rev_dedup, on="order_id", how="left")
+
+    # Derived columns
+    fact["review_score"] = fact["review_score"].fillna(0).astype(int)
+    fact["payment_type"] = fact["payment_type"].fillna("unknown")
+    fact["payment_installments"] = (
+        fact["payment_installments"].fillna(1).astype(int)
+    )
+    fact["payment_value"] = fact["payment_value"].fillna(0.0)
+
+    # Extract year/month for partitioning
+    fact["year"] = fact["order_purchase_timestamp"].dt.year.astype("Int64")
+    fact["month"] = fact["order_purchase_timestamp"].dt.month.astype("Int64")
+
+    # Drop rows without valid dates (needed for partitioning)
+    fact = fact.dropna(subset=["year", "month"])
+    fact["year"] = fact["year"].astype(int)
+    fact["month"] = fact["month"].astype(int)
+
+    save_partitioned_parquet(fact, "fact_orders", ["year", "month"])
+
+
 def run_transformation() -> dict[str, pd.DataFrame]:
     """Execute all transformations and return processed DataFrames."""
     logger.info("=" * 60)
@@ -191,6 +274,9 @@ def run_transformation() -> dict[str, pd.DataFrame]:
 
     save_parquet(translations, "category_translations")
     datasets["translations"] = translations
+
+    # Build partitioned fact_orders Parquet (year/month partitioning)
+    build_fact_orders_parquet(datasets)
 
     logger.info("TRANSFORMATION COMPLETE — %d datasets processed", len(datasets))
     return datasets

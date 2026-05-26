@@ -1,0 +1,24 @@
+version: 2
+
+sources:
+  - name: olist_raw
+    description: "Processed Parquet files from the Python transformation layer"
+    meta:
+      external_location: "../../data/processed/{name}.parquet"
+    tables:
+      - name: orders
+        description: "Order header data with timestamps and status"
+      - name: order_items
+        description: "Line items per order with pricing"
+      - name: payments
+        description: "Payment transactions per order"
+      - name: reviews
+        description: "Customer reviews with scores and comments"
+      - name: customers
+        description: "Customer demographics and location"
+      - name: sellers
+        description: "Seller information and location"
+      - name: products
+        description: "Product catalog with categories and dimensions"
+      - name: geolocation
+        description: "Deduplicated geographic coordinates per zip code"
