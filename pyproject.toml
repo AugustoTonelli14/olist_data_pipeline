@@ -11,6 +11,9 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["ingestion", "transformation", "modeling", "pipeline", "analytics", "storage"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
