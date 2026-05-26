@@ -17,3 +17,4 @@ known-first-party = ["ingestion", "transformation", "modeling", "pipeline", "ana
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+pythonpath = ["."]
