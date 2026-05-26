@@ -1,9 +1,9 @@
 # Olist E-Commerce Data Pipeline
 
-![CI](https://github.com/yourusername/olist_data_pipeline/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/AugustoTonelli14/olist_data_pipeline/actions/workflows/ci.yml/badge.svg)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/data_license-CC%20BY--NC--SA%204.0-lightgrey)
-![Tests](https://img.shields.io/badge/tests-30%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-37%20passed-brightgreen)
 
 A production-grade data pipeline for the Brazilian E-Commerce (Olist) dataset, demonstrating end-to-end Data Engineering skills: ingestion, transformation, dimensional modeling, analytics, testing, and CI/CD.
 
