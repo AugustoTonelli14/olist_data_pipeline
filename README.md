@@ -68,7 +68,7 @@ The modeling layer transforms 9 normalized CSV files into a clean star schema:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/olist_data_pipeline.git
+git clone https://github.com/AugustoTonelli14/olist_data_pipeline.git
 cd olist_data_pipeline
 
 # Create virtual environment
